@@ -4,9 +4,14 @@ import { DeviceMetadata } from '../models/feedback.model';
 
 const UUID_KEY = 'tf_device_uuid';
 
+/**
+ * Collecte les métadonnées envoyées avec chaque signalement public :
+ * UUID persistant, OS, navigateur, IP (ipify), GPS optionnel (5 s timeout).
+ */
 @Injectable({ providedIn: 'root' })
 export class DeviceMetadataService {
 
+  /** Identifiant anonyme de l'appareil, conservé entre les sessions (localStorage). */
   getOrCreateUuid(): string {
     let id = localStorage.getItem(UUID_KEY);
     if (!id) {
@@ -43,7 +48,7 @@ export class DeviceMetadataService {
       browser: this.detectBrowser(),
     };
 
-    // Geolocation (optionnel, avec timeout)
+    // GPS : optionnel — échec silencieux si refus ou timeout navigateur
     try {
       const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 });

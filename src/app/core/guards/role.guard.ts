@@ -2,6 +2,10 @@ import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 
+/**
+ * Vérifie le rôle utilisateur (ex. ROLE_ADMIN pour /admin/*).
+ * Utilise route.data.roles défini dans app.routes.ts.
+ */
 export const roleGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);

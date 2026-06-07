@@ -7,6 +7,10 @@ import { FeedbackResponse } from '../../../core/models/feedback.model';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 import { StatusBadgeComponent } from '../../../shared/components/status-badge/status-badge.component';
 
+/**
+ * Suivi public d'une réclamation par numéro de référence (REC-AAAA-XXXXXX).
+ * Affiche statut, messages et stepper de progression.
+ */
 @Component({
   selector: 'app-track-page',
   standalone: true,
@@ -67,6 +71,7 @@ export class TrackPageComponent implements OnInit {
     });
   }
 
+  /** Compare le statut courant aux étapes du stepper visuel (Nouveau → Clôturé). */
   getStepStatus(step: string): 'completed' | 'active' | 'pending' {
     const complaintData = this.complaint();
     if (!complaintData) return 'pending';

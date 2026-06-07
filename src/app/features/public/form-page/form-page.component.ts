@@ -7,6 +7,14 @@ import { DeviceMetadataService } from '../../../core/services/device-metadata.se
 import { FeedbackType, Bus, Station } from '../../../core/models/feedback.model';
 import { LoadingSpinnerComponent } from '../../../shared/components/loading-spinner/loading-spinner.component';
 
+/**
+ * Formulaire public de signalement (réclamation, suggestion, incident, félicitations).
+ *
+ * Flux :
+ * 1. Lit ?busId / ?stationId dans l'URL (scan QR ou lien direct)
+ * 2. Charge listes bus/stations depuis l'API publique
+ * 3. À la soumission : collecte métadonnées appareil + FormData multipart → API
+ */
 @Component({
   selector: 'app-form-page',
   standalone: true,
@@ -31,7 +39,7 @@ export class FormPageComponent implements OnInit {
   buses = signal<Bus[]>([]);
   stations = signal<Station[]>([]);
   
-  // Selection mode: 'bus' | 'station' | 'none'
+  // Contexte transport issu du QR code ou sélection manuelle
   contextMode = signal<'bus' | 'station' | 'none'>('none');
   
   // Selected Context (loaded if id present in url)
@@ -69,6 +77,7 @@ export class FormPageComponent implements OnInit {
         const busIdParam = params['busId'];
         const stationIdParam = params['stationId'];
 
+        // Pré-remplissage automatique après scan QR ou lien direct
         if (busIdParam) {
           const id = Number(busIdParam);
           this.feedbackForm.patchValue({ busId: id });
@@ -158,6 +167,7 @@ export class FormPageComponent implements OnInit {
     try {
       const metadata = await this.metadataService.collectMetadata();
 
+      // FormData requis par le backend (multipart/form-data + fichier optionnel)
       const formData = new FormData();
       formData.append('type', this.feedbackForm.value.type);
       formData.append('subject', this.feedbackForm.value.subject);

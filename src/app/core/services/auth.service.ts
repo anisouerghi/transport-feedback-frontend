@@ -8,6 +8,10 @@ import { AuthRequest, AuthResponse, User, UserRole } from '../models/user.model'
 const TOKEN_KEY = 'tf_access_token';
 const USER_KEY  = 'tf_user';
 
+/**
+ * Gestion de la session agent/admin : login, JWT en localStorage, rôles.
+ * Le token est injecté automatiquement par authInterceptor sur chaque requête HTTP.
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private base = environment.apiUrl;
@@ -18,6 +22,7 @@ export class AuthService {
   readonly currentUser  = this._currentUser.asReadonly();
   readonly isLoggedIn   = computed(() => !!this._token());
   readonly isAdmin      = computed(() => this._currentUser()?.role === 'ROLE_ADMIN');
+  /** Admin hérite des droits agent (isAgent inclut ROLE_ADMIN). */
   readonly isAgent      = computed(() => this._currentUser()?.role === 'ROLE_AGENT' || this._currentUser()?.role === 'ROLE_ADMIN');
 
   constructor(private http: HttpClient, private router: Router) {}

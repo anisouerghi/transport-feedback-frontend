@@ -1,3 +1,7 @@
+/**
+ * Types TypeScript alignés sur les DTOs backend (réclamations, bus, stations, QR).
+ * FeedbackStatus / FeedbackType correspondent aux enums Java.
+ */
 export type FeedbackType = 'RECLAMATION' | 'SUGGESTION' | 'INCIDENT' | 'FELICITATIONS';
 export type FeedbackStatus = 'NOUVEAU' | 'AFFECTE' | 'EN_COURS' | 'RESOLU' | 'CLOTURE';
 

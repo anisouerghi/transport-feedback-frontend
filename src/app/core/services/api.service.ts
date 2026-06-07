@@ -8,6 +8,10 @@ import {
 } from '../models/feedback.model';
 import { User } from '../models/user.model';
 
+/**
+ * Point central des appels HTTP vers le backend Spring Boot.
+ * Base URL : environment.apiUrl (ex. http://localhost:8080/api/v1/api/v1)
+ */
 @Injectable({ providedIn: 'root' })
 export class ApiService {
   private base = environment.apiUrl;
@@ -15,6 +19,7 @@ export class ApiService {
   constructor(private http: HttpClient) {}
 
   // ── Public Feedback ──────────────────────────────────────
+  /** Soumission multipart : champs texte + métadonnées appareil + fichier photo optionnel. */
   submitFeedback(formData: FormData): Observable<FeedbackResponse> {
     return this.http.post<FeedbackResponse>(`${this.base}/complaints/public`, formData);
   }
