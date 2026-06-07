@@ -1,0 +1,227 @@
+<div class="container page-content">
+
+  <!-- Page Header -->
+  <div class="page-header animate-fade-in">
+    <div class="header-left">
+      <h1 class="page-title">
+        <span class="title-icon">📋</span>
+        Gestion des réclamations
+      </h1>
+      <p class="page-subtitle">{{ totalElements() }} réclamation(s) au total</p>
+    </div>
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="filters-bar card animate-fade-in">
+    <div class="filters-grid">
+      <div class="form-group">
+        <label for="search-filter">Recherche</label>
+        <div class="search-input-wrapper">
+          <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            id="search-filter"
+            type="text"
+            class="form-control with-search-icon"
+            placeholder="Référence, sujet, nom..."
+            [ngModel]="filterSearch()"
+            (ngModelChange)="filterSearch.set($event)"
+            (keyup.enter)="applyFilters()"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="status-filter">Statut</label>
+        <select
+          id="status-filter"
+          class="form-control"
+          [ngModel]="filterStatus()"
+          (ngModelChange)="filterStatus.set($event)"
+        >
+          <option value="">Tous les statuts</option>
+          @for (s of statuses; track s.value) {
+            <option [value]="s.value">{{ s.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="type-filter">Type</label>
+        <select
+          id="type-filter"
+          class="form-control"
+          [ngModel]="filterType()"
+          (ngModelChange)="filterType.set($event)"
+        >
+          <option value="">Tous les types</option>
+          @for (t of types; track t.value) {
+            <option [value]="t.value">{{ t.label }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="filter-actions">
+        <button class="btn btn-primary" id="apply-filter-btn" (click)="applyFilters()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+          Filtrer
+        </button>
+        <button class="btn btn-secondary" id="reset-filter-btn" (click)="resetFilters()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.53"/>
+          </svg>
+          Réinitialiser
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-state animate-fade-in">
+      <div class="loading-spinner-lg"></div>
+      <p>Chargement des réclamations...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!loading() && error()) {
+    <div class="error-state card animate-fade-in">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <p>{{ error() }}</p>
+      <button class="btn btn-primary" (click)="loadComplaints()">Réessayer</button>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!loading() && !error() && complaints().length === 0) {
+    <div class="empty-state card animate-fade-in">
+      <div class="empty-icon">📭</div>
+      <h3>Aucune réclamation trouvée</h3>
+      <p>Modifiez vos critères de filtrage ou attendez de nouvelles soumissions.</p>
+      <button class="btn btn-secondary" (click)="resetFilters()">Réinitialiser les filtres</button>
+    </div>
+  }
+
+  <!-- Table -->
+  @if (!loading() && !error() && complaints().length > 0) {
+    <div class="table-wrapper card animate-fade-in">
+      <div class="table-responsive">
+        <table class="data-table" id="complaints-table">
+          <thead>
+            <tr>
+              <th>Référence</th>
+              <th>Type</th>
+              <th>Sujet</th>
+              <th>Localisation</th>
+              <th>Statut</th>
+              <th>Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of complaints(); track c.id) {
+              <tr class="table-row">
+                <td>
+                  <span class="ref-badge">{{ c.reference }}</span>
+                </td>
+                <td>
+                  <span class="type-chip" [attr.data-type]="c.type">
+                    {{ c.type | feedbackType }}
+                  </span>
+                </td>
+                <td>
+                  <div class="subject-cell">
+                    <span class="subject-text">{{ c.subject }}</span>
+                    @if (c.attachmentFileName) {
+                      <span class="attachment-indicator" title="Pièce jointe">📎</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <div class="location-cell">
+                    @if (c.busPlateNumber) {
+                      <span class="loc-badge bus">🚌 {{ c.busPlateNumber }}</span>
+                    } @else if (c.stationName) {
+                      <span class="loc-badge station">🏪 {{ c.stationName }}</span>
+                    } @else {
+                      <span class="loc-badge unknown">—</span>
+                    }
+                  </div>
+                </td>
+                <td>
+                  <app-status-badge [value]="c.status" />
+                </td>
+                <td>
+                  <span class="date-text">{{ formatDate(c.createdAt) }}</span>
+                </td>
+                <td>
+                  <a
+                    [routerLink]="['/complaints', c.id]"
+                    class="btn btn-secondary btn-sm"
+                    [id]="'view-complaint-' + c.id"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                      <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Voir
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="pagination-bar">
+          <span class="pagination-info">
+            Page {{ currentPage() + 1 }} / {{ totalPages() }}
+            ({{ totalElements() }} résultats)
+          </span>
+          <div class="pagination-controls">
+            <button
+              class="page-btn"
+              id="prev-page-btn"
+              [disabled]="currentPage() === 0"
+              (click)="goToPage(currentPage() - 1)"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+
+            @for (p of pages; track p) {
+              @if (p >= currentPage() - 2 && p <= currentPage() + 2) {
+                <button
+                  class="page-btn"
+                  [class.active]="p === currentPage()"
+                  [id]="'page-btn-' + p"
+                  (click)="goToPage(p)"
+                >{{ p + 1 }}</button>
+              }
+            }
+
+            <button
+              class="page-btn"
+              id="next-page-btn"
+              [disabled]="currentPage() >= totalPages() - 1"
+              (click)="goToPage(currentPage() + 1)"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

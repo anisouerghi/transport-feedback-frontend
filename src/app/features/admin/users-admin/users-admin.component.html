@@ -1,0 +1,188 @@
+<div class="container admin-page">
+
+  <!-- Page Header -->
+  <div class="page-header animate-fade-in">
+    <div>
+      <h1 class="page-title">
+        <span class="title-icon">👥</span>
+        Gestion des utilisateurs
+      </h1>
+      <p class="page-subtitle">Créer et gérer les comptes agents et administrateurs.</p>
+    </div>
+    <button class="btn btn-primary" id="open-create-user-btn" (click)="openCreateForm()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      Nouvel utilisateur
+    </button>
+  </div>
+
+  <!-- Create User Form Panel -->
+  @if (showCreateForm()) {
+    <div class="create-panel card animate-fade-in">
+      <div class="panel-header">
+        <h3>Créer un nouvel utilisateur</h3>
+        <button class="close-btn" id="close-create-form-btn" (click)="closeCreateForm()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      @if (createError()) {
+        <div class="alert-error">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          {{ createError() }}
+        </div>
+      }
+
+      <div class="panel-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="new-username">Nom d'utilisateur</label>
+            <input
+              id="new-username"
+              type="text"
+              class="form-control"
+              placeholder="ex: agent.dupont"
+              [ngModel]="newUsername()"
+              (ngModelChange)="newUsername.set($event)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="new-password">Mot de passe</label>
+            <input
+              id="new-password"
+              type="password"
+              class="form-control"
+              placeholder="••••••••"
+              [ngModel]="newPassword()"
+              (ngModelChange)="newPassword.set($event)"
+            />
+          </div>
+          <div class="form-group">
+            <label for="new-role">Rôle</label>
+            <select id="new-role" class="form-control"
+              [ngModel]="newRole()"
+              (ngModelChange)="newRole.set($event)">
+              @for (r of roles; track r.value) {
+                <option [value]="r.value">{{ r.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group form-actions">
+            <button
+              class="btn btn-primary"
+              id="create-user-submit-btn"
+              [disabled]="createLoading()"
+              (click)="createUser()"
+            >
+              @if (createLoading()) {
+                <span class="spinner-sm"></span> Création...
+              } @else {
+                Créer le compte
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="loading-spinner-lg"></div>
+      <p>Chargement des utilisateurs...</p>
+    </div>
+  }
+
+  <!-- Error -->
+  @if (!loading() && error()) {
+    <div class="error-state card">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <p>{{ error() }}</p>
+      <button class="btn btn-primary" (click)="loadUsers()">Réessayer</button>
+    </div>
+  }
+
+  <!-- Users Table -->
+  @if (!loading() && !error()) {
+    <div class="table-wrapper card animate-fade-in">
+      <div class="table-responsive">
+        <table class="data-table" id="users-table">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Rôle</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (users().length === 0) {
+              <tr>
+                <td colspan="4" class="empty-row">
+                  <span>👤</span> Aucun utilisateur trouvé.
+                </td>
+              </tr>
+            }
+            @for (u of users(); track u.id) {
+              <tr class="table-row">
+                <td>
+                  <div class="user-cell">
+                    <div class="avatar">{{ u.username?.charAt(0)?.toUpperCase() }}</div>
+                    <div class="user-info">
+                      <span class="username">{{ u.username }}</span>
+                      @if (u.email) {
+                        <span class="user-email">{{ u.email }}</span>
+                      }
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <select
+                    class="role-select"
+                    [id]="'role-select-' + u.id"
+                    [ngModel]="u.role"
+                    (ngModelChange)="changeRole(u, $event)"
+                    [disabled]="actionLoading() === u.id"
+                  >
+                    @for (r of roles; track r.value) {
+                      <option [value]="r.value">{{ r.label }}</option>
+                    }
+                  </select>
+                </td>
+                <td>
+                  <span class="status-pill" [class.active]="u.active" [class.inactive]="!u.active">
+                    {{ u.active ? 'Actif' : 'Inactif' }}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    class="btn btn-sm"
+                    [class.btn-secondary]="u.active"
+                    [class.btn-primary]="!u.active"
+                    [id]="'toggle-user-' + u.id"
+                    [disabled]="actionLoading() === u.id"
+                    (click)="toggleUser(u)"
+                  >
+                    @if (actionLoading() === u.id) {
+                      <span class="spinner-sm-dark"></span>
+                    } @else {
+                      {{ u.active ? 'Désactiver' : 'Activer' }}
+                    }
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

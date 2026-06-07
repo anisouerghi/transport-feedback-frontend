@@ -1,0 +1,206 @@
+<div class="track-page container">
+  <!-- Title -->
+  <div class="track-header text-center">
+    <h1 class="text-gradient">Suivi de votre signalement</h1>
+    <p class="subtitle">Entrez la référence unique fournie lors de votre soumission pour consulter le statut et échanger avec nos équipes.</p>
+  </div>
+
+  <!-- Search Card -->
+  <div class="search-card card glass">
+    <form (ngSubmit)="onSearchSubmit()" class="search-form">
+      <div class="form-row">
+        <div class="form-group flex-2">
+          <label for="refInput">Référence du signalement</label>
+          <input id="refInput" type="text" class="form-control" [(ngModel)]="referenceInput" name="ref" placeholder="Ex: REC-2026-000001" required />
+        </div>
+        <div class="form-group flex-2">
+          <label for="emailInput">Votre email (Optionnel)</label>
+          <input id="emailInput" type="email" class="form-control" [(ngModel)]="emailInput" name="email" placeholder="Ex: email@example.com" />
+        </div>
+        <div class="form-group btn-col">
+          <button type="submit" class="btn btn-primary btn-block">Rechercher</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <app-loading-spinner height="250px" message="Recherche du dossier en cours..."></app-loading-spinner>
+  }
+
+  <!-- Error State -->
+  @if (searched() && !isLoading() && errorMessage()) {
+    <div class="error-card animate-fade-in text-center">
+      <div class="error-icon">⚠️</div>
+      <h3>Aucun dossier trouvé</h3>
+      <p>{{ errorMessage() }}</p>
+    </div>
+  }
+
+  <!-- Empty State (No search yet) -->
+  @if (!searched() && !isLoading()) {
+    <div class="empty-state text-center">
+      <div class="illustration-circle">
+        <svg xmlns="http://www.w3.org/2000/svg" height="48" viewBox="0 -960 960 960" width="48" fill="currentColor">
+          <path d="M480-120q-150 0-255-105T120-480q0-150 105-255t255-105q14 0 27.5 1t26.5 3q-41 29-65.5 75.5T444-660q0 90 63 153t153 63q52 0 98.5-24.5T836-734q2 13 3 26.5t1 27.5q0 150-105 255T480-120Zm0-80q112 0 192-74t87-184q-19 6-38.5 9.5T580-440q-123 0-209.5-86.5T284-736q-16 0-33-2.5t-33-6.5q-42 45-66 103.5T128-518q0 147 102.5 249.5T480-200Zm0-280Z"/>
+        </svg>
+      </div>
+      <h3>Consultez l'avancement</h3>
+      <p>Entrez votre code de référence ci-dessus. Nos équipes de support s'efforcent de traiter chaque demande dans les meilleurs délais.</p>
+    </div>
+  }
+
+  <!-- Result Details (If found) -->
+  @if (searched() && !isLoading() && complaint()) {
+    @let c = complaint()!;
+    <div class="result-container animate-fade-in">
+      
+      <!-- Stepper / Timeline Progress -->
+      <div class="stepper-card card">
+        <div class="stepper">
+          <!-- Step 1 -->
+          <div class="step" [class.completed]="getStepStatus('NOUVEAU') === 'completed'" [class.active]="getStepStatus('NOUVEAU') === 'active'">
+            <div class="step-circle">1</div>
+            <div class="step-label">Signalé</div>
+          </div>
+          <!-- Line -->
+          <div class="step-line" [class.completed]="getStepStatus('AFFECTE') === 'completed' || getStepStatus('AFFECTE') === 'active'"></div>
+          <!-- Step 2 -->
+          <div class="step" [class.completed]="getStepStatus('AFFECTE') === 'completed'" [class.active]="getStepStatus('AFFECTE') === 'active'">
+            <div class="step-circle">2</div>
+            <div class="step-label">Pris en charge</div>
+          </div>
+          <!-- Line -->
+          <div class="step-line" [class.completed]="getStepStatus('EN_COURS') === 'completed' || getStepStatus('EN_COURS') === 'active'"></div>
+          <!-- Step 3 -->
+          <div class="step" [class.completed]="getStepStatus('EN_COURS') === 'completed'" [class.active]="getStepStatus('EN_COURS') === 'active'">
+            <div class="step-circle">3</div>
+            <div class="step-label">En cours</div>
+          </div>
+          <!-- Line -->
+          <div class="step-line" [class.completed]="getStepStatus('RESOLU') === 'completed' || getStepStatus('RESOLU') === 'active' || getStepStatus('CLOTURE') === 'completed' || getStepStatus('CLOTURE') === 'active'"></div>
+          <!-- Step 4 -->
+          <div class="step" [class.completed]="getStepStatus('RESOLU') === 'completed' || getStepStatus('CLOTURE') === 'completed'" [class.active]="getStepStatus('RESOLU') === 'active' || getStepStatus('CLOTURE') === 'active'">
+            <div class="step-circle">4</div>
+            <div class="step-label">Résolu</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-grid">
+        <!-- Ticket Information -->
+        <div class="ticket-info-card card">
+          <div class="card-header-row">
+            <span class="ref-badge">{{ c.reference }}</span>
+            <app-status-badge [value]="c.status" badgeType="status"></app-status-badge>
+          </div>
+          
+          <div class="field-list">
+            <div class="field-item">
+              <span class="label">Date de dépôt</span>
+              <span class="value">{{ formatDate(c.createdAt) }}</span>
+            </div>
+            <div class="field-item">
+              <span class="label">Type de retour</span>
+              <span class="value">
+                <app-status-badge [value]="c.type" badgeType="type"></app-status-badge>
+              </span>
+            </div>
+            
+            @if (c.busPlateNumber) {
+              <div class="field-item">
+                <span class="label">Bus concerné</span>
+                <span class="value">🚌 {{ c.busPlateNumber }} (Ligne {{ c.lineCode }})</span>
+              </div>
+            } @else if (c.stationName) {
+              <div class="field-item">
+                <span class="label">Station concernée</span>
+                <span class="value">🚉 {{ c.stationName }}</span>
+              </div>
+            }
+
+            @if (c.assignedAgentName) {
+              <div class="field-item">
+                <span class="label">Agent affecté</span>
+                <span class="value">👤 {{ c.assignedAgentName }}</span>
+              </div>
+            }
+
+            @if (c.resolvedAt) {
+              <div class="field-item">
+                <span class="label">Date de résolution</span>
+                <span class="value text-success">{{ formatDate(c.resolvedAt) }}</span>
+              </div>
+            }
+          </div>
+
+          <div class="ticket-content">
+            <h3>{{ c.subject }}</h3>
+            <p class="desc">{{ c.description }}</p>
+
+            @if (c.attachmentFileName) {
+              <div class="attachment-box">
+                <span class="file-icon">📎</span>
+                <div class="file-details">
+                  <a [href]="c.attachmentUrl" target="_blank" class="file-link">{{ c.attachmentFileName }}</a>
+                  <span class="file-size">({{ (c.attachmentSize || 0) / 1024 / 1024 | number:'1.2-2' }} Mo)</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Chat / Timeline -->
+        <div class="chat-card card">
+          <h3>Historique et échanges</h3>
+          
+          <div class="chat-history">
+            <!-- Initial ticket message -->
+            <div class="chat-bubble user">
+              <div class="bubble-header">
+                <span class="sender-name">{{ c.travelerName || 'Voyageur (Vous)' }}</span>
+                <span class="bubble-time">{{ formatDate(c.createdAt) }}</span>
+              </div>
+              <p class="bubble-content">Signalement créé avec le sujet : "{{ c.subject }}"</p>
+            </div>
+
+            <!-- Messages list -->
+            @for (msg of c.messages; track msg.id) {
+              @if (!msg.isInternal) {
+                <div class="chat-bubble" [class.agent]="msg.senderName" [class.user]="!msg.senderName">
+                  <div class="bubble-header">
+                    <span class="sender-name">{{ msg.senderName || 'Voyageur (Vous)' }}</span>
+                    <span class="bubble-time">{{ formatDate(msg.createdAt) }}</span>
+                  </div>
+                  <p class="bubble-content">{{ msg.content }}</p>
+                </div>
+              }
+            }
+
+            <!-- Empty chat status -->
+            @if (!c.messages || c.messages.length === 0) {
+              <div class="chat-empty-state">
+                <p>Aucun message public à afficher pour le moment. Votre dossier est en attente d'évaluation.</p>
+              </div>
+            }
+          </div>
+
+          <!-- Fixed status display -->
+          @if (c.status === 'RESOLU' || c.status === 'CLOTURE') {
+            <div class="resolved-banner text-center">
+              <span class="icon">✅</span>
+              <span>Ce signalement a été résolu. Le dossier est maintenant fermé.</span>
+            </div>
+          } @else {
+            <div class="pending-banner">
+              <span class="spinner-small"></span>
+              <span>Nos agents analysent votre dossier. Toute mise à jour sera affichée ici en temps réel.</span>
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+  }
+</div>

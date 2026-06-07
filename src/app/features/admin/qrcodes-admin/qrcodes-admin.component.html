@@ -1,0 +1,205 @@
+<div class="container admin-page">
+
+  <!-- Page Header -->
+  <div class="page-header animate-fade-in">
+    <div>
+      <h1 class="page-title">
+        <span class="title-icon">📱</span>
+        Gestion des QR Codes
+      </h1>
+      <p class="page-subtitle">Créez, consultez et gérez les QR codes du réseau de transport</p>
+    </div>
+    <button class="btn btn-primary" (click)="openGenerateForm()">
+      <span class="btn-icon">➕</span>
+      Générer un QR Code
+    </button>
+  </div>
+
+  <!-- Generate QR Code Panel -->
+  @if (showGenerateForm()) {
+    <div class="generate-panel glass card animate-slide-down">
+      <div class="panel-header">
+        <h2>Nouveau QR Code</h2>
+        <button class="btn-icon-close" (click)="closeGenerateForm()" aria-label="Fermer">✕</button>
+      </div>
+
+      <div class="generate-form">
+        <!-- Type selector -->
+        <div class="type-selector">
+          <button
+            class="type-btn"
+            [class.active]="generateType() === 'bus'"
+            (click)="generateType.set('bus')">
+            <span class="type-icon">🚌</span>
+            Bus
+          </button>
+          <button
+            class="type-btn"
+            [class.active]="generateType() === 'station'"
+            (click)="generateType.set('station')">
+            <span class="type-icon">🚉</span>
+            Station
+          </button>
+        </div>
+
+        <!-- Bus selector -->
+        @if (generateType() === 'bus') {
+          <div class="form-group">
+            <label class="form-label" for="busSelect">Sélectionnez un bus</label>
+            <select
+              id="busSelect"
+              class="form-select"
+              [ngModel]="selectedBusId()"
+              (ngModelChange)="selectedBusId.set($event)">
+              <option [ngValue]="null" disabled>— Choisir un bus —</option>
+              @for (bus of buses(); track bus.id) {
+                <option [ngValue]="bus.id">
+                  {{ bus.plateNumber }} — {{ bus.line?.name || 'Sans ligne' }}
+                </option>
+              }
+            </select>
+          </div>
+        }
+
+        <!-- Station selector -->
+        @if (generateType() === 'station') {
+          <div class="form-group">
+            <label class="form-label" for="stationSelect">Sélectionnez une station</label>
+            <select
+              id="stationSelect"
+              class="form-select"
+              [ngModel]="selectedStationId()"
+              (ngModelChange)="selectedStationId.set($event)">
+              <option [ngValue]="null" disabled>— Choisir une station —</option>
+              @for (station of stations(); track station.id) {
+                <option [ngValue]="station.id">{{ station.name }}</option>
+              }
+            </select>
+          </div>
+        }
+
+        @if (generateError()) {
+          <div class="alert alert-error">{{ generateError() }}</div>
+        }
+
+        <div class="form-actions">
+          <button class="btn btn-secondary" (click)="closeGenerateForm()">Annuler</button>
+          <button
+            class="btn btn-primary"
+            (click)="generateQrCode()"
+            [disabled]="generateLoading()">
+            @if (generateLoading()) {
+              <span class="spinner-sm"></span>
+            }
+            Générer
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Search bar -->
+  <div class="search-bar glass animate-fade-in">
+    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
+      <path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/>
+    </svg>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Rechercher par identifiant, bus ou station..."
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)">
+  </div>
+
+  <!-- Loading state -->
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <p>Chargement des QR codes...</p>
+    </div>
+  }
+
+  <!-- Error state -->
+  @if (error()) {
+    <div class="error-state card glass">
+      <p>{{ error() }}</p>
+      <button class="btn btn-primary" (click)="loadAll()">Réessayer</button>
+    </div>
+  }
+
+  <!-- QR Codes Grid -->
+  @if (!loading() && !error()) {
+    @if (filteredQrCodes.length === 0) {
+      <div class="empty-state card glass animate-fade-in">
+        <div class="empty-icon">📱</div>
+        <h3>Aucun QR code trouvé</h3>
+        <p>Commencez par générer un premier QR code pour le réseau</p>
+        <button class="btn btn-primary" (click)="openGenerateForm()">Générer un QR Code</button>
+      </div>
+    } @else {
+      <div class="qr-grid">
+        @for (qr of filteredQrCodes; track qr.id) {
+          <div class="qr-card card glass animate-fade-in">
+            <!-- QR Image preview -->
+            <div class="qr-image-wrapper">
+              <img
+                [src]="getQrImageUrl(qr.qrCodeIdentifier)"
+                [alt]="'QR Code ' + qr.qrCodeIdentifier"
+                class="qr-image"
+                loading="lazy">
+            </div>
+
+            <!-- QR Info -->
+            <div class="qr-info">
+              <div class="qr-identifier">
+                <span class="id-label">ID</span>
+                <span class="id-value">{{ qr.qrCodeIdentifier }}</span>
+              </div>
+
+              <div class="qr-location">
+                <span class="location-icon">{{ getLocationIcon(qr) }}</span>
+                <span class="location-text">{{ getLocationLabel(qr) }}</span>
+              </div>
+
+              <div class="qr-date">
+                <span class="date-icon">📅</span>
+                <span class="date-text">{{ formatDate(qr.generatedAt) }}</span>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="qr-actions">
+              <button
+                class="btn btn-secondary btn-sm"
+                (click)="downloadPdf(qr)"
+                title="Télécharger le PDF">
+                <span>📄</span> PDF
+              </button>
+              <button
+                class="btn btn-danger btn-sm"
+                (click)="askDelete(qr)"
+                title="Supprimer">
+                <span>🗑️</span> Supprimer
+              </button>
+            </div>
+          </div>
+        }
+      </div>
+
+      <div class="results-count">
+        {{ filteredQrCodes.length }} QR code{{ filteredQrCodes.length > 1 ? 's' : '' }} trouvé{{ filteredQrCodes.length > 1 ? 's' : '' }}
+      </div>
+    }
+  }
+
+  <!-- Delete Confirmation Dialog -->
+  <app-confirm-dialog
+    [visible]="showDeleteDialog()"
+    title="Supprimer le QR Code"
+    [message]="'Êtes-vous sûr de vouloir supprimer le QR code ' + (deleteTarget()?.qrCodeIdentifier || '') + ' ? Cette action est irréversible.'"
+    confirmText="Supprimer"
+    confirmBtnClass="btn-danger"
+    (confirm)="confirmDelete()"
+    (cancel)="cancelDelete()">
+  </app-confirm-dialog>
+</div>

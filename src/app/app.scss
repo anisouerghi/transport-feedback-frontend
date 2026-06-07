@@ -1,0 +1,159 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: relative;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  width: 100%;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.875rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+
+  .logo-circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--primary-light);
+    color: var(--primary);
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    transition: transform 0.3s ease;
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  &:hover .logo-circle {
+    transform: rotate(15deg);
+  }
+
+  .brand-text {
+    font-family: var(--font-title);
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+
+    .text-accent {
+      color: var(--primary);
+    }
+  }
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+
+  @media (max-width: 768px) {
+    display: none; // We will design a responsive bar later if needed, but for now we focus on standard
+  }
+
+  .nav-link {
+    font-family: var(--font-title);
+    font-size: 0.95rem;
+    font-weight: 550;
+    text-decoration: none;
+    color: var(--text-muted);
+    padding: 0.5rem 0.25rem;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease;
+
+    &:hover {
+      color: var(--text-main);
+    }
+
+    &.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+  }
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+
+  .theme-toggle-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background-color: var(--primary-light);
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+  }
+
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .username {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+  }
+
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    border-radius: var(--radius-md);
+  }
+}
+
+.app-main {
+  flex-grow: 1;
+  width: 100%;
+}
+
+.app-footer {
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 0;
+  text-align: center;
+  background-color: var(--bg-card);
+  transition: all 0.3s ease;
+
+  .footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+}

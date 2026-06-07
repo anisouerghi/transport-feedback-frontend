@@ -1,0 +1,236 @@
+<div class="feedback-page container">
+  <!-- Success Success Overlay/Banner -->
+  @if (submitSuccess()) {
+    <div class="success-card glass animate-slide-up">
+      <div class="success-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" height="64" viewBox="0 -960 960 960" width="64" fill="currentColor">
+          <path d="m424-296 282-282-56-56-226 226-114-114-56 56 170 170Zm56 216q-83 0-156-31.5T197-197q-54-54-85.5-127T80-480q0-83 31.5-156T209-763q54-54 127-85.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 83-31.5 156T751-197q-54 54-127 85.5T480-80Z"/>
+        </svg>
+      </div>
+      <h2>Signalement Envoyé !</h2>
+      <p class="success-desc">Merci pour votre retour. Vos remarques nous aident à améliorer continuellement la qualité de nos services de transport en commun.</p>
+      
+      <div class="ref-container">
+        <span class="ref-label">Votre Numéro de Suivi</span>
+        <div class="ref-code">
+          <span>{{ createdReference() }}</span>
+          <button class="copy-btn" (click)="copyReference()" title="Copier le code">
+            <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor">
+              <path d="M360-240q-33 0-56.5-23.5T280-320v-480q0-33 23.5-56.5T360-880h360q33 0 56.5 23.5T800-800v480q0 33-23.5 56.5T720-240H360Zm0-80h360v-480H360v480ZM200-80q-33 0-56.5-23.5T120-160v-560h80v560h440v80H200Zm160-240v-480 480Z"/>
+            </svg>
+          </button>
+        </div>
+        <p class="ref-instructions">Conservez précieusement ce code pour suivre le traitement de votre demande en ligne.</p>
+      </div>
+
+      <div class="success-actions">
+        <button class="btn btn-primary" [routerLink]="['/track']" [queryParams]="{ reference: createdReference() }">Suivre l'avancement</button>
+        <button class="btn btn-secondary" (click)="resetSuccess()">Nouveau Signalement</button>
+      </div>
+    </div>
+  } @else {
+    <!-- Main Form Screen -->
+    <div class="form-grid">
+      <!-- Left Side Intro -->
+      <div class="intro-section">
+        <h1 class="text-gradient">Votre avis est essentiel</h1>
+        <p class="intro-p">Scanner un QR Code à bord ou dans une station vous permet de signaler instantanément un incident, faire une suggestion d'amélioration, ou féliciter nos équipes de conduite.</p>
+        
+        <div class="feature-bullets">
+          <div class="bullet-card">
+            <div class="bullet-icon rec">
+              <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor"><path d="M320-240h320v-80H320v80Zm0-160h320v-80H320v80ZM240-80q-33 0-56.5-23.5T160-160v-640q0-33 23.5-56.5T240-880h320l240 240v480q0 33-23.5 56.5T720-80H240Zm280-570v-150H240v640h480v-490H520ZM240-800v150-150 640-640Z"/></svg>
+            </div>
+            <div>
+              <h3>Signalement Simplifié</h3>
+              <p>Soumettez votre demande en quelques clics sans inscription obligatoire.</p>
+            </div>
+          </div>
+          <div class="bullet-card">
+            <div class="bullet-icon geo">
+              <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor"><path d="M480-480q33 0 56.5-23.5T560-560q0-33-23.5-56.5T480-640q-33 0-56.5 23.5T400-560q0 33 23.5 56.5T480-480Zm0 294q122-112 181-203.5T720-552q0-109-75.5-184.5T480-812q-109 0-184.5 75.5T220-552q0 71 59 162.5T480-186Zm0 106Q319-224 239.5-327T160-552q0-150 105-255t255-105q150 0 255 105t105 255q0 124-79.5 225T480-80Z"/></svg>
+            </div>
+            <div>
+              <h3>Géolocalisation & Contexte</h3>
+              <p>Nous associons automatiquement votre signalement à la ligne ou station correspondante.</p>
+            </div>
+          </div>
+          <div class="bullet-card">
+            <div class="bullet-icon msg">
+              <svg xmlns="http://www.w3.org/2000/svg" height="20" viewBox="0 -960 960 960" width="20" fill="currentColor"><path d="M240-400h480v-80H240v80Zm0-120h480v-80H240v80Zm0-120h480v-80H240v80ZM80-80v-720q0-33 23.5-56.5T160-880h640q33 0 56.5 23.5T920-800v480q0 33-23.5 56.5T800-240H240L80-80Zm80-196 68-68h572v-456H160v496Zm0 0v-496 496Z"/></svg>
+            </div>
+            <div>
+              <h3>Suivi Interactif</h3>
+              <p>Communiquez en direct avec l'agent affecté à la résolution de votre signalement.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Side Form Card -->
+      <div class="form-container card">
+        @if (isLoadingRefs()) {
+          <app-loading-spinner height="300px" message="Récupération des données contextuelles..."></app-loading-spinner>
+        } @else {
+          <form [formGroup]="feedbackForm" (ngSubmit)="onSubmit()" class="feedback-form">
+            
+            <!-- Type Selector -->
+            <div class="form-group">
+              <label>De quoi s'agit-il ?</label>
+              <div class="type-selector-grid">
+                <button type="button" class="type-btn rec" [class.selected]="feedbackForm.value.type === 'RECLAMATION'" (click)="selectType('RECLAMATION')">
+                  <span class="emoji">⚠️</span>
+                  <span>Réclamation</span>
+                </button>
+                <button type="button" class="type-btn inc" [class.selected]="feedbackForm.value.type === 'INCIDENT'" (click)="selectType('INCIDENT')">
+                  <span class="emoji">🔥</span>
+                  <span>Incident</span>
+                </button>
+                <button type="button" class="type-btn sug" [class.selected]="feedbackForm.value.type === 'SUGGESTION'" (click)="selectType('SUGGESTION')">
+                  <span class="emoji">💡</span>
+                  <span>Suggestion</span>
+                </button>
+                <button type="button" class="type-btn fel" [class.selected]="feedbackForm.value.type === 'FELICITATIONS'" (click)="selectType('FELICITATIONS')">
+                  <span class="emoji">👏</span>
+                  <span>Félicitations</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- QR code dynamic Banner / Location selection -->
+            @if (selectedBus()) {
+              <div class="context-banner bus animate-fade-in">
+                <div class="banner-icon">🚌</div>
+                <div class="banner-body">
+                  <h4>À bord d'un bus</h4>
+                  <p>Votre retour concerne le Bus <strong>{{ selectedBus()?.plateNumber }}</strong> (Modèle {{ selectedBus()?.model || 'Standard' }}) sur la Ligne <strong>{{ selectedBus()?.line?.code }}</strong>.</p>
+                </div>
+              </div>
+            } @else if (selectedStation()) {
+              <div class="context-banner station animate-fade-in">
+                <div class="banner-icon">🚉</div>
+                <div class="banner-body">
+                  <h4>Dans une station</h4>
+                  <p>Votre retour concerne la Station <strong>{{ selectedStation()?.name }}</strong>.</p>
+                </div>
+              </div>
+            } @else {
+              <!-- Location Type selection -->
+              <div class="form-group">
+                <label>Emplacement concerné</label>
+                <div class="context-selector">
+                  <button type="button" class="btn btn-secondary btn-sm" [class.active]="contextMode() === 'bus'" (click)="setContextMode('bus')">À bord d'un bus</button>
+                  <button type="button" class="btn btn-secondary btn-sm" [class.active]="contextMode() === 'station'" (click)="setContextMode('station')">Dans une station</button>
+                  <button type="button" class="btn btn-secondary btn-sm" [class.active]="contextMode() === 'none'" (click)="setContextMode('none')">Autre / Non défini</button>
+                </div>
+              </div>
+
+              <!-- Conditional Dropdowns -->
+              @if (contextMode() === 'bus') {
+                <div class="form-group animate-slide-up">
+                  <label for="busSelect">Sélectionnez le bus</label>
+                  <select id="busSelect" class="form-control" formControlName="busId" (change)="onBusChange($event)">
+                    <option [value]="null">-- Choisir un bus --</option>
+                    @for (b of buses(); track b.id) {
+                      <option [value]="b.id">{{ b.plateNumber }} (Ligne {{ b.line?.code }})</option>
+                    }
+                  </select>
+                </div>
+              }
+
+              @if (contextMode() === 'station') {
+                <div class="form-group animate-slide-up">
+                  <label for="stationSelect">Sélectionnez la station</label>
+                  <select id="stationSelect" class="form-control" formControlName="stationId" (change)="onStationChange($event)">
+                    <option [value]="null">-- Choisir une station --</option>
+                    @for (s of stations(); track s.id) {
+                      <option [value]="s.id">{{ s.name }}</option>
+                    }
+                  </select>
+                </div>
+              }
+            }
+
+            <!-- Subject & Description -->
+            <div class="form-group">
+              <label for="subject">Sujet / Titre du signalement</label>
+              <input id="subject" type="text" class="form-control" formControlName="subject" placeholder="Ex: Panne d'affichage, Retard, etc." />
+              @if (feedbackForm.get('subject')?.touched && feedbackForm.get('subject')?.errors?.['required']) {
+                <span class="error-text">Le sujet est requis.</span>
+              }
+              @if (feedbackForm.get('subject')?.errors?.['maxlength']) {
+                <span class="error-text">Le sujet ne peut pas dépasser 150 caractères.</span>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="description">Description détaillée</label>
+              <textarea id="description" class="form-control" formControlName="description" rows="4" placeholder="Veuillez décrire précisément la situation..."></textarea>
+              @if (feedbackForm.get('description')?.touched && feedbackForm.get('description')?.errors?.['required']) {
+                <span class="error-text">La description est requise.</span>
+              }
+            </div>
+
+            <!-- Traveler Information Accordion -->
+            <div class="traveler-info-card">
+              <div class="info-header">
+                <h4>Vos coordonnées (Optionnel)</h4>
+                <p>Pour être recontacté par nos agents et suivre l'avancement de votre ticket.</p>
+              </div>
+              <div class="info-body">
+                <div class="form-group">
+                  <input type="text" class="form-control" formControlName="travelerName" placeholder="Votre nom complet" />
+                </div>
+                <div class="form-group-row">
+                  <div class="form-group">
+                    <input type="email" class="form-control" formControlName="travelerEmail" placeholder="Votre adresse email" />
+                    @if (feedbackForm.get('travelerEmail')?.touched && feedbackForm.get('travelerEmail')?.errors?.['email']) {
+                      <span class="error-text">Format email invalide.</span>
+                    }
+                  </div>
+                  <div class="form-group">
+                    <input type="tel" class="form-control" formControlName="travelerPhone" placeholder="Votre téléphone" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- File Attachment -->
+            <div class="form-group file-upload-container">
+              <label>Pièce jointe (Photo, Image...)</label>
+              @if (filePreview) {
+                <div class="preview-box">
+                  <img [src]="filePreview" alt="Aperçu pièce jointe" />
+                  <div class="file-info">
+                    <span class="file-name">{{ selectedFile?.name }}</span>
+                    <span class="file-size">{{ (selectedFile?.size || 0) / 1024 / 1024 | number:'1.2-2' }} Mo</span>
+                  </div>
+                  <button type="button" class="remove-file-btn" (click)="removeFile()">Supprimer</button>
+                </div>
+              } @else {
+                <label for="fileInput" class="upload-dropzone">
+                  <svg xmlns="http://www.w3.org/2000/svg" height="32" viewBox="0 -960 960 960" width="32" fill="currentColor">
+                    <path d="M440-320v-326L336-542l-56-56 200-200 200 200-56 56-104-104v326h-80ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/>
+                  </svg>
+                  <span>Glisser-déposer ou cliquer pour importer</span>
+                  <span class="upload-subtext">Images PNG, JPG ou GIF jusqu'à 5 Mo</span>
+                  <input id="fileInput" type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none;" />
+                </label>
+              }
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit" class="btn btn-primary btn-block btn-lg" [disabled]="isSubmitting()">
+              @if (isSubmitting()) {
+                <span>Envoi en cours...</span>
+              } @else {
+                <span>Envoyer le signalement</span>
+              }
+            </button>
+
+          </form>
+        }
+      </div>
+    </div>
+  }
+</div>
